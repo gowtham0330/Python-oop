@@ -1,0 +1,2 @@
+[console_scripts]
+university-registrar = university_registrar.main:main

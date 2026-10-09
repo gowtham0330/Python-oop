@@ -1,0 +1,90 @@
+{
+  "version": "1.0",
+  "total_records": 6,
+  "students": [
+    {
+      "name": "Maya Lin",
+      "age": 20,
+      "email": "maya.lin@university.edu",
+      "student_id": "UG-2024-001",
+      "department": "Computer Science",
+      "course": "B.S. Computer Systems",
+      "semester": 4,
+      "cgpa": 9.2,
+      "student_type": "undergraduate",
+      "academic_advisor": "Dr. Eleanor Vance",
+      "internship_status": "Completed",
+      "academic_standing": "Dean's List"
+    },
+    {
+      "name": "Marcus Adebayo",
+      "age": 19,
+      "email": "marcus.a@university.edu",
+      "student_id": "UG-2024-002",
+      "department": "Electrical Engineering",
+      "course": "B.S. Electrical Engineering",
+      "semester": 2,
+      "cgpa": 8.1,
+      "student_type": "undergraduate",
+      "academic_advisor": "Dr. Robert Chen",
+      "internship_status": "In Progress",
+      "academic_standing": "Good Standing"
+    },
+    {
+      "name": "Sofia Ramirez",
+      "age": 21,
+      "email": "sofia.r@university.edu",
+      "student_id": "UG-2024-003",
+      "department": "Mathematics",
+      "course": "B.S. Applied Mathematics",
+      "semester": 6,
+      "cgpa": 8.85,
+      "student_type": "undergraduate",
+      "academic_advisor": "Dr. Kenneth Lee",
+      "internship_status": "Completed",
+      "academic_standing": "Dean's List"
+    },
+    {
+      "name": "Tariq Al-Mansoor",
+      "age": 25,
+      "email": "tariq.m@university.edu",
+      "student_id": "PG-2024-101",
+      "department": "Computer Science",
+      "course": "M.S. Artificial Intelligence",
+      "semester": 4,
+      "cgpa": 9.45,
+      "student_type": "postgraduate",
+      "research_topic": "Autonomous Perception Systems",
+      "thesis_supervisor": "Prof. Alan Turing",
+      "defense_eligible": true
+    },
+    {
+      "name": "Elena Rostova",
+      "age": 26,
+      "email": "elena.rostova@university.edu",
+      "student_id": "PG-2024-102",
+      "department": "Physics",
+      "course": "M.S. Quantum Optics",
+      "semester": 3,
+      "cgpa": 7.8,
+      "student_type": "postgraduate",
+      "research_topic": "Quantum Entanglement Networks",
+      "thesis_supervisor": "Prof. Maria Curie",
+      "defense_eligible": true
+    },
+    {
+      "name": "Dev Patel",
+      "age": 24,
+      "email": "dev.patel@university.edu",
+      "student_id": "PG-2024-103",
+      "department": "Bioengineering",
+      "course": "M.S. Biomedical Engineering",
+      "semester": 2,
+      "cgpa": 8.4,
+      "student_type": "postgraduate",
+      "research_topic": "Biocompatible Neural Probes",
+      "thesis_supervisor": "Prof. Rosalind Franklin",
+      "defense_eligible": false
+    }
+  ]
+}

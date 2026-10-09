@@ -1,0 +1,399 @@
+# University Registrar: Object-Oriented Data Management and Exception Handling System
+
+[![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests Passing](https://img.shields.io/badge/pytest-96%20passed%20%7C%20100%25-brightgreen.svg)]()
+[![Code Style](https://img.shields.io/badge/code%20style-PEP%208%20%2F%20Typed-informational.svg)]()
+
+> **RabTech Academy Python Software Engineering Internship Deliverable**  
+> *Project Title: Python Object-Oriented Data Management and Exception Handling System*
+
+---
+
+## 1. Project Overview
+
+The **University Registrar System** is a modular, production-grade Python 3 application engineered to model, validate, persist, and analyze higher-education student records. The system models realistic university registrar workflows with an object-oriented class hierarchy, explicit custom domain exceptions, atomic JSON and CSV persistence, and an automated testing suite implemented with `pytest`.
+
+This project does not rely on third-party cloud services, proprietary database servers, or external network connectivity. It leverages the standard Python runtime and ecosystem conventions, making it portable, auditable, and ready for deployment or submission.
+
+---
+
+## 2. Key Objectives & Features
+
+1. **Object-Oriented Design & Inheritance**:
+   - Clean taxonomy separating generic human personal identity (`Person`) from academic credentials (`Student`).
+   - Domain-specific extensions for undergraduate degrees (`UndergraduateStudent`) and postgraduate research degrees (`PostgraduateStudent`).
+   - Encapsulation, polymorphism, dynamic property evaluation, and serialization helpers.
+
+2. **Custom Python Exception Hierarchy**:
+   - Structured error hierarchy rooted at `RegistrarError`.
+   - Distinct, actionable exceptions for validation mistakes, unique constraint violations, missing entities, format issues, and I/O failures.
+   - Clean separation of internal exceptions from end-user CLI diagnostics.
+
+3. **Strict Domain Validation**:
+   - Explicit checking for RFC-compliant email formatting, positive integer boundaries for age and semesters, alphanumeric identifiers, non-empty text, and finite float ranges for CGPA ($0.0 \le \text{CGPA} \le 10.0$).
+   - Rejects type mismatches gracefully (e.g., rejecting strings like `"excellent"` where a numeric float is required).
+
+4. **Dual-Format Persistence (JSON & CSV)**:
+   - Atomic file writes using temporary sibling files with disk flushes (`os.fsync`) and atomic replacements (`os.replace`), guarding against data corruption during unexpected program terminations.
+   - Preserves polymorphic subtype information across both formats.
+   - Automatic parent directory creation and UTF-8 encoding.
+
+5. **All-or-Nothing Transactional Imports**:
+   - Validates entire batches prior to mutating internal state, guaranteeing zero partial writes upon corrupted or conflicting records.
+
+6. **Interactive & Automated CLI**:
+   - Command-line interface built on `argparse` supporting `add`, `list`, `get`, `search`, `delete`, `export`, `import`, and `stats` subcommands.
+   - Support for custom storage paths via `-d / --data-file`.
+
+7. **Automated Unit Testing Suite**:
+   - 96 granular unit tests with `pytest` exercising model boundaries, custom exceptions, validation edges, storage error injections via mocks, CLI invocations, and round-trip serialization.
+
+---
+
+## 3. Architecture & Repository Structure
+
+The project follows the standard Python packaging `src/` layout recommended by the Python Packaging Authority (PyPA):
+
+```text
+university-registrar/
+├── pyproject.toml              # Modern build configuration and pytest definitions
+├── README.md                   # Comprehensive project documentation
+├── LICENSE                     # MIT Open Source License
+├── .gitignore                  # Production Python gitignore rules
+├── src/
+│   └── university_registrar/
+│       ├── __init__.py         # Package root exposing public API
+│       ├── __main__.py         # Allows execution via `python -m university_registrar`
+│       ├── main.py             # CLI parser and command handlers
+│       ├── models.py           # Person, Student, Undergrad & Postgrad class hierarchy
+│       ├── exceptions.py       # Custom exception taxonomy
+│       ├── validators.py       # Robust field-level validators
+│       ├── storage.py          # Atomic JSON and CSV persistence utilities
+│       └── registrar.py        # UniversityRegistrar manager and analytics
+├── tests/
+│   ├── test_models.py          # Model initialization, serialization, and inheritance tests
+│   ├── test_exceptions.py      # Exception hierarchy and message formatting tests
+│   ├── test_validators.py      # Input validation boundaries and type-rejection tests
+│   ├── test_storage.py         # JSON/CSV persistence, mocks, and atomic write tests
+│   └── test_registrar.py       # Registrar service business logic and CLI tests
+├── data/
+│   └── .gitkeep                # Default persistent storage destination
+└── examples/
+    ├── sample_students.json    # Verified sample dataset (JSON)
+    └── sample_students.csv     # Verified sample dataset (CSV)
+```
+
+---
+
+## 4. Class Hierarchy
+
+```text
+               ┌───────────────────────┐
+               │        Person         │
+               │───────────────────────│
+               │ name: str             │
+               │ age: int              │
+               │ email: str            │
+               │ to_dict() / from_dict │
+               └───────────┬───────────┘
+                           │ inherits
+                           ▼
+               ┌───────────────────────┐
+               │        Student        │
+               │───────────────────────│
+               │ student_id: str       │
+               │ department: str       │
+               │ course: str           │
+               │ semester: int [1..12] │
+               │ cgpa: float [0..10]   │
+               │ student_type: str     │
+               └───────────┬───────────┘
+                           │
+             ┌─────────────┴─────────────┐
+             ▼                           ▼
+┌──────────────────────────┐ ┌──────────────────────────┐
+│   UndergraduateStudent   │ │   PostgraduateStudent    │
+│──────────────────────────│ │──────────────────────────│
+│ academic_advisor: str    │ │ research_topic: str      │
+│ internship_status: str   │ │ thesis_supervisor: str   │
+│ max_semesters: 8         │ │ max_semesters: 6         │
+│ academic_standing (prop) │ │ defense_eligible (prop)  │
+└──────────────────────────┘ └──────────────────────────┘
+```
+
+- **`Person`**: Base entity establishing legal name, age ($16 \le \text{age} \le 100$), and email address.
+- **`Student`**: Extends `Person` with unique academic identity (`student_id`), department, course program, active semester ($1 \le \text{semester} \le 12$), and cumulative grade point average ($0.0 \le \text{CGPA} \le 10.0$).
+- **`UndergraduateStudent`**: Constrains semesters ($1 \le \text{semester} \le 8$). Computes honors standing:
+  - **Dean's List**: $\text{CGPA} \ge 8.5$
+  - **Good Standing**: $5.0 \le \text{CGPA} < 8.5$
+  - **Academic Warning**: $\text{CGPA} < 5.0$
+- **`PostgraduateStudent`**: Constrains semesters ($1 \le \text{semester} \le 6$). Tracks thesis supervisor and research topic. Evaluates `defense_eligible`:
+  - Enrolled semester $\ge 3$
+  - Cumulative GPA $\ge 7.0$
+  - Defined research topic assigned
+
+---
+
+## 5. Custom Exception Hierarchy
+
+The application establishes a domain-specific exception taxonomy under `RegistrarError`. All raised exceptions provide descriptive metadata (field names, conflicting values, system causes) without exposing internal tracebacks to users.
+
+```text
+Exception
+ └── RegistrarError
+      ├── ValidationError         (field: str, value: Any, message: str)
+      ├── DuplicateStudentError   (student_id: str)
+      ├── StudentNotFoundError    (student_id: str)
+      └── StorageError            (path: str, cause: Exception)
+           └── UnsupportedFormatError (format_name: str)
+```
+
+| Exception | Trigger Condition |
+| :--- | :--- |
+| `ValidationError` | Non-numeric CGPA, out-of-range semester, invalid email format, empty text fields, or illegal values. |
+| `DuplicateStudentError` | Attempting to register an existing `student_id` or importing conflicting identifiers. |
+| `StudentNotFoundError` | Querying, modifying, or deleting a student ID that does not exist in the registrar. |
+| `StorageError` | I/O failures, permissions issues, malformed JSON structures, or missing required CSV headers. |
+| `UnsupportedFormatError` | Specifying a file extension other than `.json` or `.csv`. |
+
+---
+
+## 6. JSON & CSV Persistence
+
+### Atomic File Write Guarantee
+Direct writes to storage files can lead to data loss or truncation if a crash or power failure occurs mid-write. The storage engine enforces atomic write semantics:
+1. Writes UTF-8 payload to a hidden temporary sibling file (`.{filename}_{random}.tmp`).
+2. Issues an explicit filesystem flush and cache sync (`os.fsync`).
+3. Replaces the destination target atomically using `os.replace` (POSIX atomic rename guarantee).
+
+### Polymorphic Subtype Preservation
+Both JSON envelopes and CSV tabular records record the `student_type` attribute. When loaded, `Student.from_dict()` analyzes this attribute and re-instantiates the appropriate subclass (`UndergraduateStudent` or `PostgraduateStudent`), reconstructing properties such as `academic_advisor` or `thesis_supervisor`.
+
+---
+
+## 7. Prerequisites
+
+- **Python**: Version **3.10** or newer (Python 3.10, 3.11, or 3.12).
+- **Package Manager**: `pip` (included with standard Python installers).
+- **Platform**: Platform-independent (Windows 10/11, macOS, Linux).
+
+---
+
+## 8. Installation Instructions
+
+### Windows (PowerShell)
+
+```powershell
+# 1. Clone repository and navigate to folder
+git clone https://github.com/gowthamraj03309/university-registrar.git
+cd university-registrar
+
+# 2. Create isolated virtual environment
+py -m venv .venv
+
+# 3. Activate virtual environment
+.\.venv\Scripts\Activate.ps1
+
+# 4. Upgrade pip and install package in editable mode with development tools
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+
+# 5. Verify test suite execution
+pytest -q
+
+# 6. Verify CLI help
+python -m university_registrar --help
+```
+
+### Linux & macOS (Bash / Zsh)
+
+```bash
+# 1. Clone repository and navigate to folder
+git clone https://github.com/gowthamraj03309/university-registrar.git
+cd university-registrar
+
+# 2. Create isolated virtual environment
+python3 -m venv .venv
+
+# 3. Activate virtual environment
+source .venv/bin/activate
+
+# 4. Upgrade pip and install package in editable mode with development tools
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+
+# 5. Run automated test suite
+pytest -q
+
+# 6. Verify CLI execution
+python -m university_registrar --help
+```
+
+---
+
+## 9. Command-Line Interface (CLI) Usage
+
+The registrar CLI can be invoked using `python -m university_registrar` or directly using the installed console script `university-registrar`.
+
+### 1. View Help and Options
+```bash
+python -m university_registrar --help
+```
+
+### 2. Import Sample Students
+```bash
+python -m university_registrar import examples/sample_students.json
+```
+
+### 3. List Registered Students
+```bash
+python -m university_registrar list
+```
+
+Optional filters:
+```bash
+# Filter by department
+python -m university_registrar list --dept "Computer Science"
+
+# Filter by student type
+python -m university_registrar list --type undergraduate
+
+# Sort by CGPA descending
+python -m university_registrar list --sort cgpa
+```
+
+### 4. Register a New Student (Flag-Based or Interactive)
+```bash
+python -m university_registrar add \
+  --id "UG-2024-050" \
+  --name "Grace Hopper" \
+  --email "grace@navy.edu" \
+  --age 21 \
+  --dept "Computer Science" \
+  --course "B.S. Computer Engineering" \
+  --semester 3 \
+  --cgpa 9.85 \
+  --type undergraduate \
+  --advisor "Dr. Shannon"
+```
+
+*If `--id`, `--name`, or `--email` are omitted, the CLI enters an interactive prompt asking for each field.*
+
+### 5. Inspect Single Student Details
+```bash
+python -m university_registrar get "UG-2024-001"
+```
+
+### 6. Search Records (Case-Insensitive)
+```bash
+# Search across student ID, name, email, department, course, advisors, supervisors
+python -m university_registrar search "Turing"
+```
+
+### 7. Export Records to CSV or JSON
+```bash
+python -m university_registrar export data/students_backup.csv
+```
+
+### 8. Display University Analytics and Metrics
+```bash
+python -m university_registrar stats
+```
+
+**Example Output**:
+```text
+========================================
+      UNIVERSITY REGISTRAR METRICS      
+========================================
+ Total Registered Students : 6
+ Undergraduates            : 3
+ Postgraduates             : 3
+ Average CGPA              : 8.63
+ Highest CGPA              : 9.45
+ Lowest CGPA               : 7.80
+ Dean's List (Honors)      : 2
+ Thesis Defense Eligible   : 2
+
+--- Department Breakdown ---
+  Computer Science         : 2
+  Electrical Engineering   : 1
+  Mathematics              : 1
+  Physics                  : 1
+  Bioengineering           : 1
+
+--- CGPA Distribution ---
+  9.0 - 10.0 (Exceptional) : 2
+  8.0 - 8.9 (Very Good)    : 3
+  7.0 - 7.9 (Good)         : 1
+  5.0 - 6.9 (Satisfactory) : 0
+  < 5.0 (At Risk)          : 0
+========================================
+```
+
+### 9. Delete a Student
+```bash
+python -m university_registrar delete "UG-2024-050"
+```
+
+---
+
+## 10. Automated Testing with pytest
+
+The test suite covers models, exceptions, validators, persistence, and CLI integration.
+
+```bash
+# Run the complete test suite with verbose output
+pytest -v
+
+# Run with test coverage report (if pytest-cov installed)
+pytest --cov=university_registrar --cov-report=term-missing
+
+# Run specific module tests
+pytest tests/test_models.py -v
+pytest tests/test_storage.py -v
+```
+
+### Test Suite Summary:
+- **`tests/test_models.py`**: Model construction, dataclass inheritance, polymorphic serialization/deserialization, semester boundaries, Dean's List and thesis defense properties.
+- **`tests/test_exceptions.py`**: Verification of exception hierarchy, custom attributes (`field`, `value`, `student_id`, `cause`), and string formatting.
+- **`tests/test_validators.py`**: Negative and positive boundary testing for names, email addresses, ages, semesters, numeric CGPA constraints, and type rejections.
+- **`tests/test_storage.py`**: Round-trip persistence tests for JSON and CSV, missing files, corrupted JSON syntax, malformed CSV rows, unsupported extensions, mocked permission errors, and atomic writing.
+- **`tests/test_registrar.py`**: Adding, retrieving, modifying, deleting, sorting, searching, department statistics, transaction rollback on bad batches, and CLI commands.
+
+---
+
+## 11. Error-Handling Architecture
+
+1. **No Silent Failures**: Any invalid input (e.g., passing a string `"top"` for CGPA or negative age) immediately raises a `ValidationError` specifying the invalid field and the reason.
+2. **Transactional Integrity**: When importing a file containing 100 valid students and 1 corrupted student, the registrar will reject the entire batch without modifying the active registry, ensuring data consistency.
+3. **Graceful CLI Diagnostics**: The CLI traps domain exceptions (`ValidationError`, `DuplicateStudentError`, `StudentNotFoundError`, `StorageError`) and prints clean, colored status messages with appropriate non-zero exit codes:
+   - `0`: Success
+   - `1`: Validation error or unsupported format
+   - `2`: Duplicate student or missing student
+   - `3`: Storage I/O failure
+
+---
+
+## 12. Troubleshooting
+
+| Issue | Cause | Resolution |
+| :--- | :--- | :--- |
+| `ModuleNotFoundError: No module named 'university_registrar'` | The package has not been installed or `src` is not in Python path. | Run `pip install -e .` or export `PYTHONPATH=src`. |
+| `ValidationError: [cgpa] CGPA must be between 0.0 and 10.0` | Value passed is negative or exceeds 10.0. | Ensure grades are normalized to standard 10-point scale. |
+| `DuplicateStudentError` | Attempting to register an existing ID. | Check current IDs with `python -m university_registrar list` or update the existing student. |
+| `StorageError: JSON storage file not found` | Specified file does not exist. | Verify path or create an initial file with `add` or `import`. |
+
+---
+
+## 13. Limitations & Future Roadmap
+
+- **Concurrency**: Currently optimized for single-process CLI workflows; future iterations may add file locking (`fcntl` / `msvcrt`) for concurrent multi-process writes.
+- **Database Backends**: Ready to be extended with an abstract persistence interface supporting SQLite / PostgreSQL.
+- **Course Prerequisites & Enrollment**: Can expand models to represent prerequisite graphs and semester course scheduling.
+
+---
+
+## 14. License
+
+This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.

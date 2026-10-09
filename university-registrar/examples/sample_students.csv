@@ -1,0 +1,7 @@
+student_id,name,email,age,department,course,semester,cgpa,student_type,academic_advisor,internship_status,research_topic,thesis_supervisor
+UG-2024-001,Maya Lin,maya.lin@university.edu,20,Computer Science,B.S. Computer Systems,4,9.20,undergraduate,Dr. Eleanor Vance,Completed,,
+UG-2024-002,Marcus Adebayo,marcus.a@university.edu,19,Electrical Engineering,B.S. Electrical Engineering,2,8.10,undergraduate,Dr. Robert Chen,In Progress,,
+UG-2024-003,Sofia Ramirez,sofia.r@university.edu,21,Mathematics,B.S. Applied Mathematics,6,8.85,undergraduate,Dr. Kenneth Lee,Completed,,
+PG-2024-101,Tariq Al-Mansoor,tariq.m@university.edu,25,Computer Science,M.S. Artificial Intelligence,4,9.45,postgraduate,,,Autonomous Perception Systems,Prof. Alan Turing
+PG-2024-102,Elena Rostova,elena.rostova@university.edu,26,Physics,M.S. Quantum Optics,3,7.80,postgraduate,,,Quantum Entanglement Networks,Prof. Maria Curie
+PG-2024-103,Dev Patel,dev.patel@university.edu,24,Bioengineering,M.S. Biomedical Engineering,2,8.40,postgraduate,,,Biocompatible Neural Probes,Prof. Rosalind Franklin

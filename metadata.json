@@ -1,0 +1,6 @@
+{
+  "name": "University Registrar - Python OOP & Data Management System",
+  "description": "Production-grade Python 3 object-oriented University Registrar and Student Management System with custom exceptions, JSON/CSV persistence, comprehensive pytest suite, CLI, and downloadable GitHub repository package.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
